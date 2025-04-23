@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -12,15 +13,26 @@ from sklearn.multioutput import MultiOutputRegressor
 st.set_page_config(page_title="UTS & Elongation Predictor", layout="centered")
 
 # Title
-st.title("UTS & Elongation Predictor ")
+st.title("UTS & Elongation Predictor")
 st.write("This app predicts **Ultimate Tensile Strength (UTS)** and **Elongation** based on layer thickness and infill pattern.")
 
 # Step 1: Load data
-uts_elong_df = pd.read_excel("UTS_Elongation.xlsx")
-stress_strain_df = pd.read_excel("MDSP Dataset.xlsx")
+try:
+    uts_elong_df = pd.read_excel("UTS_Elongation.xlsx")
+    stress_strain_df = pd.read_excel("MDSP Dataset.xlsx")
+    print("Columns in UTS_Elongation.xlsx:", uts_elong_df.columns.tolist())  # Debug print
+except FileNotFoundError as e:
+    st.error(f"Error: Could not find one of the required files: {e}. Please ensure 'UTS_Elongation.xlsx' and 'MDSP Dataset.xlsx' are in the same directory as this script.")
+    st.stop()
+
+# Check number of columns
+expected_columns = ['Layer_Thickness_mm', 'Pattern', 'UTS_MPa', 'Elongation_percent']
+if len(uts_elong_df.columns) != len(expected_columns):
+    st.error(f"Error: Expected {len(expected_columns)} columns in UTS_Elongation.xlsx, but found {len(uts_elong_df.columns)}. Columns found: {uts_elong_df.columns.tolist()}")
+    st.stop()
 
 # Rename columns for clarity
-uts_elong_df.columns = ['Layer_Thickness_mm', 'Pattern', 'UTS_MPa', 'Elongation_percent']
+uts_elong_df.columns = expected_columns
 uts_elong_df = uts_elong_df.dropna()
 
 # Step 2: Extract extra features from stress-strain data
@@ -94,3 +106,51 @@ if st.button("Predict"):
     ax.tick_params(colors='white')
     ax.legend(facecolor='black', edgecolor='white', fontsize=10)
     st.pyplot(fig)
+```
+
+#### 5. **Additional Debugging Steps**
+If the above changes don’t resolve the issue:
+- **Inspect the first few rows of the DataFrame**:
+  Add this after loading the Excel file to see the data:
+  ```python
+  print("First few rows of UTS_Elongation.xlsx:\n", uts_elong_df.head())
+  ```
+  This will help confirm whether the data is being loaded correctly.
+
+- **Specify Columns Explicitly**:
+  If you know the exact columns in `UTS_Elongation.xlsx`, you can load only those columns using `usecols`. For example:
+  ```python
+  uts_elong_df = pd.read_excel("UTS_Elongation.xlsx", usecols=['Layer Thickness(mm)', 'Pattern', 'UTS (MPa)', 'Elongation (%)'])
+  ```
+  Adjust the column names based on what’s in the Excel file.
+
+- **Check for Hidden Columns**:
+  Sometimes Excel files include hidden or empty columns. Open the file in a text editor or use Pandas to check all columns:
+  ```python
+  uts_elong_df = pd.read_excel("UTS_Elongation.xlsx")
+  print("All columns:", uts_elong_df.columns.tolist())
+  print("Number of columns:", len(uts_elong_df.columns))
+  ```
+
+#### 6. **Running the Updated Script**
+1. Save the updated code as `sanket.py`.
+2. Ensure `UTS_Elongation.xlsx` and `MDSP Dataset.xlsx` are in the same directory as `sanket.py`.
+3. Run the script using:
+   ```bash
+   streamlit run sanket.py
+   ```
+4. Check the terminal for debug output (column names, number of columns, etc.).
+5. Open the provided URL (e.g., `http://localhost:8501`) in a browser to interact with the app.
+
+#### 7. **Download Updated Code**
+You can download the updated code with column checking and debugging here:
+
+[Download Updated sanket.py](attachment://sanket.py)
+
+#### 8. **If the Issue Persists**
+If you still encounter errors, please provide:
+- The output of the debug print statements (e.g., column names and number of columns).
+- A description of the structure of `UTS_Elongation.xlsx` (e.g., number of columns, column names, sample rows).
+- Any new error messages.
+
+This will help me provide a more targeted solution. Let me know how it goes!
